@@ -68,8 +68,9 @@ This means you keep more good content while still removing HTML tags, spam, dupl
 > https://datacleanx.onrender.com
 
 Demo Video
-![App Demo](./assets/demo.gif)
-
+<p align="center">
+  <img src="./assets/demo.gif" width="700" />
+</p>
 
 ---
 
