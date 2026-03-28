@@ -1,612 +1,359 @@
-# 🚀 Mini FLUX — Smart Data Curation Pipeline
+# DataCleanX — FLUX-Based AI Data Cleaning Pipeline
 
-> **Inspired by the FLUX research paper** | Clean, filter, deduplicate, and score raw text into high-quality AI training data.
+> Transform noisy, messy raw text into high-quality AI training data using the **FLUX line-level cleaning methodology** — with a beautiful React dashboard to visualise every step.
+
+[![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://python.org)
+[![React](https://img.shields.io/badge/React-18-61dafb?logo=react)](https://react.dev)
+[![Flask](https://img.shields.io/badge/Flask-3.0-black?logo=flask)](https://flask.palletsprojects.com)
+[![Tests](https://img.shields.io/badge/tests-60%20passing-brightgreen)](#running-the-tests)
+[![License](https://img.shields.io/badge/license-MIT-green)](#license)
+
+---
+
+## Table of Contents
+
+- [What is DataCleanX?](#what-is-datacleanx)
+- [Why is this useful?](#why-is-this-useful)
+- [Live Demo](#live-demo)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Running Locally](#running-locally)
+- [How It Works — The FLUX Method](#how-it-works--the-flux-method)
+- [Pipeline Steps](#pipeline-steps)
+- [Running the Tests](#running-the-tests)
+- [Deploying to Render](#deploying-to-render)
+- [Contributing](#contributing)
+- [Getting Help](#getting-help)
+- [Who Maintains This](#who-maintains-this)
+- [License](#license)
+
+---
+
+## What is DataCleanX?
+
+**DataCleanX** is a full-stack web application that cleans raw text files — web scrapes, forum posts, HTML articles, research papers — into high-quality sentences ready for AI/ML training. It is inspired by the [FLUX data curation research paper](FLUX%20Data%20Worth%20Training.pdf).
+
+Upload your `.txt` files, tune the quality threshold, and get back:
+
+- A cleaned JSON dataset of high-quality sentences
+- A full stats report with interactive charts
+- A data quality grade and score
 
 ```
-Raw Text → Cleaning → Filtering → Deduplication → Quality Scoring → Final Dataset
+Raw .txt Files → Clean → Filter → Deduplicate → Quality Score → Download JSON
 ```
 
 ---
 
-## 📁 Project Structure
+## Why is this useful?
+
+Training a language model on noisy data leads to a noisy model. The biggest challenge in real-world data pipelines is that traditional tools delete entire documents the moment they find a single bad line — wasting 60–80% of potentially good data.
+
+**DataCleanX solves this with FLUX line-level filtering:**
+
+| Approach | Strategy | Data Loss |
+|---|---|---|
+| Traditional | 1 bad line → delete entire document | 60–80% |
+| FLUX (DataCleanX) | 1 bad line → delete only that line | 20–30% |
+
+This means you keep more good content while still removing HTML tags, spam, duplicate sentences, URLs, emails, encoding errors, and low-quality noise.
+
+---
+
+## Live Demo
+
+> https://datacleanx.onrender.com
+
+Demo Video
+![App Demo](./assets/demo.gif)
+
+
+---
+
+## Features
+
+- **Drag-and-drop file upload** — upload multiple `.txt` files at once
+- **Configurable pipeline** — adjust quality threshold (0.2–0.9) and minimum words per line
+- **Interactive results dashboard** with:
+  - Data quality grade (A / B / C / D)
+  - Pipeline funnel chart (Raw → Dedup → Final)
+  - Noise vs. Retained pie chart
+  - Quality score distribution histogram (colour-coded 0–1)
+  - Token count before/after comparison
+- **Download** `cleaned_data.json` and `stats.json` directly from the browser
+- **Sample guide** explaining what file types work and what FLUX removes
+- **60 automated tests** (unit, integration, end-to-end)
+
+---
+
+## Project Structure
 
 ```
-mini_flux/
+datacleanx/
+├── backend/
+│   ├── app.py               ← Flask API (/api/clean, /api/health) + serves React SPA
+│   └── requirements.txt     ← Flask, flask-cors
 │
-├── data/                   ← Put your raw .txt files here
-│   ├── doc_001.txt
-│   ├── doc_002.txt
-│   └── ...
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── types.ts
+│   │   └── components/
+│   │       ├── Navbar.tsx
+│   │       ├── HeroSection.tsx
+│   │       ├── UploadSection.tsx
+│   │       ├── SampleGuide.tsx
+│   │       └── ResultsDashboard.tsx
+│   ├── package.json
+│   └── vite.config.ts       ← Dev proxy: /api → http://127.0.0.1:5000
 │
-├── output/                 ← Pipeline results saved here (auto-created)
-│   ├── cleaned_data.json
-│   └── stats.json
+├── tests/
+│   ├── test_utils.py        ← 27 unit tests
+│   ├── test_pipeline.py     ← 13 integration tests
+│   └── test_api.py          ← 20 end-to-end API tests
 │
-├── pipeline.py             ← Main pipeline (run this)
-├── utils.py                ← All helper functions
-├── requirements.txt        ← Python dependencies
-└── README.md               ← This file
+├── data/                    ← Sample raw .txt files
+├── output/                  ← Pipeline output (auto-created, git-ignored)
+├── utils.py                 ← Core: clean_text, is_good_line, deduplicate, quality_score
+├── pipeline.py              ← CLI pipeline runner
+├── requirements.txt         ← Root deps (includes gunicorn for production)
+├── render.yaml              ← One-click Render deployment config
+└── README.md
 ```
 
 ---
 
-## ⚙️ Setup & Installation
+## Getting Started
 
-### Step 1 — Clone / Create the project folder
+### Prerequisites
+
+| Tool | Version |
+|---|---|
+| Python | 3.9 or higher |
+| Node.js | 18 or higher |
+| npm | 9 or higher |
+
+### Installation
+
+**1. Clone the repository**
 
 ```bash
-mkdir mini_flux
-cd mini_flux
+git clone https://github.com/rajeshkadiyalaaa/datacleanx.git
+cd datacleanx
 ```
 
-### Step 2 — Create a virtual environment (recommended)
+**2. Install Python dependencies**
 
 ```bash
-python -m venv venv
-
-# Activate it:
-# On Windows:
-venv\Scripts\activate
-
-# On Mac/Linux:
-source venv/bin/activate
+pip install -r backend/requirements.txt
 ```
 
-### Step 3 — Install dependencies
+**3. Install and build the frontend**
 
 ```bash
-pip install -r requirements.txt
+cd frontend
+npm install
+cd ..
 ```
 
-### Step 4 — Add your data
+### Running Locally
 
-Drop any `.txt` files into the `data/` folder. Even 10–20 files is enough to test.
+You need two terminals running at the same time.
+
+**Terminal 1 — Flask backend**
 
 ```bash
-mkdir data
-# Copy your .txt files into data/
+cd backend
+python3 app.py
+# Running on http://127.0.0.1:5000
 ```
 
-### Step 5 — Run the pipeline
+**Terminal 2 — Vite dev server**
 
 ```bash
-python pipeline.py
+cd frontend
+npm run dev
+# Running on http://localhost:3000
 ```
 
----
+Then open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-## 📄 requirements.txt
+> **macOS note:** macOS Monterey and later run AirPlay Receiver on port 5000 over IPv6. The Vite proxy is already configured to use `http://127.0.0.1:5000` (explicit IPv4) to avoid this conflict.
 
-Create this file in your project root:
+### Using the CLI (no frontend needed)
 
-```
-transformers>=4.35.0
-torch>=2.0.0
-```
+You can also run the pipeline directly from the command line:
 
----
-
-## 🐍 utils.py — Full Code
-
-Create `utils.py` and paste this:
-
-```python
-# utils.py — Mini FLUX Utility Functions
-
-import re
-import hashlib
-from collections import Counter
-from pathlib import Path
-
-# Common English stopwords
-STOPWORDS = {
-    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to',
-    'for', 'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were',
-    'be', 'been', 'have', 'has', 'had', 'this', 'that', 'it', 'its',
-    'which', 'who', 'what', 'when', 'where', 'how', 'not', 'as', 'if'
-}
-
-
-def load_documents(data_dir: str) -> list:
-    """Load all .txt files from a directory."""
-    documents = []
-    data_path = Path(data_dir)
-
-    for filepath in data_path.glob('*.txt'):
-        try:
-            text = filepath.read_text(encoding='utf-8', errors='ignore').strip()
-            if text:
-                documents.append(text)
-        except Exception as e:
-            print(f'Warning: Could not read {filepath}: {e}')
-
-    print(f'[LOAD] Loaded {len(documents)} documents from "{data_dir}"')
-    return documents
-
-
-def clean_text(text: str) -> str:
-    """
-    Clean raw text:
-    - Remove HTML tags
-    - Remove URLs and emails
-    - Remove non-ASCII characters
-    - Remove special characters
-    - Normalize whitespace
-    - Convert to lowercase
-    """
-    # Remove HTML tags
-    text = re.sub(r'<[^>]+>', ' ', text)
-
-    # Remove URLs
-    text = re.sub(r'http\S+|www\.\S+', ' ', text)
-
-    # Remove email addresses
-    text = re.sub(r'\S+@\S+\.\S+', ' ', text)
-
-    # Remove non-ASCII characters
-    text = text.encode('ascii', 'ignore').decode('ascii')
-
-    # Keep only letters, numbers, and basic punctuation
-    text = re.sub(r"[^a-zA-Z0-9\s.,!?;:'\-]", ' ', text)
-
-    # Collapse multiple spaces into one
-    text = re.sub(r'\s+', ' ', text)
-
-    # Lowercase and strip
-    return text.lower().strip()
-
-
-def is_good_line(line: str, min_words: int = 5) -> bool:
-    """
-    Heuristic filter — returns True if line is worth keeping.
-
-    Rules (FLUX-inspired):
-    - Must have at least min_words words
-    - Not too long (likely auto-generated if > 2000 chars)
-    - At least 60% alphabetic characters
-    - Less than 40% digit characters
-    - No single word repeated more than 30% of total words
-    """
-    words = line.split()
-
-    # Rule 1: Minimum word count
-    if len(words) < min_words:
-        return False
-
-    # Rule 2: Maximum line length
-    if len(line) > 2000:
-        return False
-
-    # Rule 3: Alphabetic ratio
-    alpha_chars = sum(1 for c in line if c.isalpha())
-    if len(line) > 0 and alpha_chars / len(line) < 0.60:
-        return False
-
-    # Rule 4: Digit ratio
-    digit_chars = sum(1 for c in line if c.isdigit())
-    if len(line) > 0 and digit_chars / len(line) > 0.40:
-        return False
-
-    # Rule 5: Word repetition (spam detection)
-    if words:
-        counts = Counter(words)
-        top_count = counts.most_common(1)[0][1]
-        if top_count / len(words) > 0.30:
-            return False
-
-    return True
-
-
-def deduplicate(sentences: list) -> list:
-    """
-    Remove exact duplicate sentences using SHA-256 hashing.
-    Preserves the order of first occurrences.
-    """
-    seen = set()
-    unique = []
-    removed = 0
-
-    for sentence in sentences:
-        h = hashlib.sha256(sentence.encode('utf-8')).hexdigest()
-        if h not in seen:
-            seen.add(h)
-            unique.append(sentence)
-        else:
-            removed += 1
-
-    print(f'[DEDUP] {len(sentences)} → {len(unique)} sentences ({removed} duplicates removed)')
-    return unique
-
-
-def quality_score(sentence: str) -> float:
-    """
-    Score a sentence from 0.0 (worst) to 1.0 (best).
-
-    Features:
-    - Length score       (weight: 0.25)
-    - Stopword ratio     (weight: 0.25)
-    - Lexical diversity  (weight: 0.25)
-    - Repetition penalty (weight: -0.20)
-    - Avg word length    (weight: 0.05)
-    """
-    words = sentence.split()
-    if not words:
-        return 0.0
-
-    # Feature 1: Length (optimal around 15-30 words)
-    length_score = min(len(words) / 30, 1.0)
-
-    # Feature 2: Stopword ratio (natural language indicator)
-    sw_count = sum(1 for w in words if w.lower() in STOPWORDS)
-    sw_ratio = sw_count / len(words)
-
-    # Feature 3: Lexical diversity
-    lex_div = len(set(words)) / len(words)
-
-    # Feature 4: Repetition penalty
-    counts = Counter(words)
-    repeated = sum(1 for w, c in counts.items() if c > 1)
-    rep_penalty = repeated / len(words)
-
-    # Feature 5: Average word length
-    avg_wl = sum(len(w) for w in words) / len(words)
-    wl_score = min(avg_wl / 6, 1.0)
-
-    # Weighted combination
-    score = (0.25 * length_score
-           + 0.25 * sw_ratio
-           + 0.25 * lex_div
-           - 0.20 * rep_penalty
-           + 0.05 * wl_score)
-
-    return max(0.0, min(1.0, score))
-
-
-def filter_by_quality(sentences: list, threshold: float = 0.50) -> list:
-    """Keep only sentences with quality score above threshold."""
-    kept = [s for s in sentences if quality_score(s) >= threshold]
-    removed = len(sentences) - len(kept)
-    print(f'[QUALITY] {len(sentences)} → {len(kept)} sentences ({removed} below threshold {threshold})')
-    return kept
-```
-
----
-
-## 🔧 pipeline.py — Full Code
-
-Create `pipeline.py` and paste this:
-
-```python
-# pipeline.py — Mini FLUX Main Pipeline
-
-import json
-import argparse
-from pathlib import Path
-from utils import (
-    load_documents,
-    clean_text,
-    is_good_line,
-    deduplicate,
-    filter_by_quality,
-    quality_score
-)
-
-
-def clean_document_lines(document: str, min_words: int = 5) -> str:
-    """
-    FLUX-style line-level cleaning.
-    Removes bad lines surgically — does NOT delete entire documents.
-    """
-    lines = document.split('\n')
-    good_lines = []
-
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        cleaned = clean_text(line)
-        if is_good_line(cleaned, min_words=min_words):
-            good_lines.append(cleaned)
-
-    return ' '.join(good_lines)
-
-
-def split_into_sentences(documents: list) -> list:
-    """Split documents into individual sentences."""
-    sentences = []
-    for doc in documents:
-        # Split on sentence-ending punctuation
-        for terminator in ['!', '?']:
-            doc = doc.replace(terminator, '.')
-        parts = [s.strip() for s in doc.split('.')]
-        sentences.extend([s for s in parts if s])
-    return sentences
-
-
-def run_pipeline(data_dir='data/', output_dir='output/',
-                 threshold=0.50, min_words=5):
-    """
-    Run the complete Mini FLUX data curation pipeline.
-    """
-    print('\n' + '='*50)
-    print('   Mini FLUX — Smart Data Curation Pipeline')
-    print('='*50 + '\n')
-
-    Path(output_dir).mkdir(exist_ok=True)
-
-    # ── STEP 1: Load ──────────────────────────────────
-    print('📂 Step 1: Loading documents...')
-    documents = load_documents(data_dir)
-    if not documents:
-        print('ERROR: No .txt files found in data/ folder.')
-        return
-    original_doc_count = len(documents)
-
-    # ── STEP 2–4: Clean + Line-Level Filter ───────────
-    print('\n🧹 Steps 2–4: Cleaning + Line-Level Filtering...')
-    cleaned_docs = []
-    for doc in documents:
-        cleaned = clean_document_lines(doc, min_words=min_words)
-        if cleaned.strip():
-            cleaned_docs.append(cleaned)
-    print(f'[CLEAN] {original_doc_count} → {len(cleaned_docs)} documents after cleaning')
-
-    # Split to sentences
-    all_sentences = split_into_sentences(cleaned_docs)
-    sentences_before_dedup = len(all_sentences)
-    print(f'[SPLIT] {sentences_before_dedup} total sentences extracted')
-
-    # ── STEP 5: Deduplicate ───────────────────────────
-    print('\n🔁 Step 5: Deduplication...')
-    unique_sentences = deduplicate(all_sentences)
-
-    # ── STEP 6: Quality Scoring ───────────────────────
-    print('\n⭐ Step 6: Quality Scoring...')
-    final_sentences = filter_by_quality(unique_sentences, threshold=threshold)
-
-    # ── STEP 7: Tokenization (optional preview) ───────
-    print('\n🔢 Step 7: Token count estimate...')
-    # Simple whitespace tokenization estimate (no HuggingFace needed for stats)
-    tokens_before = sum(len(s.split()) for s in all_sentences)
-    tokens_after  = sum(len(s.split()) for s in final_sentences)
-    print(f'[TOKENS] Before: ~{tokens_before:,} | After: ~{tokens_after:,}')
-
-    # ── STEP 8: Save Output ───────────────────────────
-    print('\n💾 Step 8: Saving output...')
-
-    removed_pct  = round((1 - len(final_sentences) / max(sentences_before_dedup, 1)) * 100, 1)
-    retained_pct = round(100 - removed_pct, 1)
-    noise_token_pct = round((1 - tokens_after / max(tokens_before, 1)) * 100, 1)
-
-    stats = {
-        'documents_loaded':      original_doc_count,
-        'documents_after_clean': len(cleaned_docs),
-        'sentences_original':    sentences_before_dedup,
-        'sentences_after_dedup': len(unique_sentences),
-        'sentences_final':       len(final_sentences),
-        'removed_pct':           removed_pct,
-        'retained_pct':          retained_pct,
-        'tokens_before':         tokens_before,
-        'tokens_after':          tokens_after,
-        'noise_tokens_removed_pct': noise_token_pct,
-        'quality_threshold':     threshold,
-    }
-
-    # Save cleaned dataset
-    with open(f'{output_dir}cleaned_data.json', 'w', encoding='utf-8') as f:
-        json.dump(final_sentences, f, indent=2, ensure_ascii=False)
-
-    # Save statistics
-    with open(f'{output_dir}stats.json', 'w', encoding='utf-8') as f:
-        json.dump(stats, f, indent=2)
-
-    # ── Print Summary ─────────────────────────────────
-    print('\n' + '='*50)
-    print('   ✅ PIPELINE COMPLETE — Summary')
-    print('='*50)
-    print(f'  Documents loaded:        {original_doc_count}')
-    print(f'  Sentences (original):    {sentences_before_dedup:,}')
-    print(f'  Sentences (final):       {len(final_sentences):,}')
-    print(f'  Noise removed:           {removed_pct}%')
-    print(f'  Data retained:           {retained_pct}%')
-    print(f'  Tokens before:           ~{tokens_before:,}')
-    print(f'  Tokens after:            ~{tokens_after:,}')
-    print(f'  Noise tokens removed:    {noise_token_pct}%')
-    print(f'\n  Output saved to: {output_dir}')
-    print('='*50 + '\n')
-
-    return final_sentences, stats
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description='Mini FLUX — Smart Data Curation Pipeline'
-    )
-    parser.add_argument('--data-dir',   default='data/',   help='Input folder (default: data/)')
-    parser.add_argument('--output-dir', default='output/', help='Output folder (default: output/)')
-    parser.add_argument('--threshold',  type=float, default=0.50,
-                        help='Quality score threshold 0.0–1.0 (default: 0.50)')
-    parser.add_argument('--min-words',  type=int, default=5,
-                        help='Minimum words per line (default: 5)')
-    return parser.parse_args()
-
-
-if __name__ == '__main__':
-    args = parse_args()
-    run_pipeline(
-        data_dir=args.data_dir,
-        output_dir=args.output_dir,
-        threshold=args.threshold,
-        min_words=args.min_words
-    )
-```
-
----
-
-## ▶️ How to Run
-
-### Default run
 ```bash
-python pipeline.py
+# Drop your .txt files into data/
+python3 pipeline.py
+
+# Custom options
+python3 pipeline.py --threshold 0.65 --min-words 3
+python3 pipeline.py --data-dir my_docs/ --output-dir results/
 ```
 
-### Custom options
+Results are saved to `output/cleaned_data.json` and `output/stats.json`.
+
+---
+
+## How It Works — The FLUX Method
+
+The core innovation is **line-level filtering** instead of document-level filtering.
+
+**Before (document-level — old approach):**
+```
+"Climate change is a pressing global issue."     ← KEEP
+"BUY NOW!!! LIMITED OFFER $$$"                  ← BAD LINE
+"Scientists predict further warming by 2100."    ← KEEP
+→ Entire document deleted because of 1 bad line
+```
+
+**After (line-level — FLUX approach):**
+```
+"Climate change is a pressing global issue."     ← KEEP ✓
+"BUY NOW!!! LIMITED OFFER $$$"                  ← removed ✗
+"Scientists predict further warming by 2100."    ← KEEP ✓
+→ Only the bad line is removed, good content is preserved
+```
+
+### Quality Scoring
+
+Each sentence is scored from `0.0` to `~0.80` using five features:
+
+| Feature | Weight | What it measures |
+|---|---|---|
+| Length score | 0.25 | Optimal sentence length (target: 30 words) |
+| Stopword ratio | 0.25 | Natural language indicator (function words) |
+| Lexical diversity | 0.25 | Unique words / total words |
+| Repetition penalty | −0.20 | Redundant word fraction |
+| Avg word length | 0.05 | Longer words → richer content |
+
+Only sentences scoring **≥ threshold** (default `0.50`) are kept.
+
+---
+
+## Pipeline Steps
+
+| Step | What it does |
+|---|---|
+| 1. Load | Read all `.txt` files from the input directory |
+| 2. Clean | Strip HTML, URLs, emails, non-ASCII, special characters, normalise case |
+| 3. Filter | Remove lines with < 5 words, high digit/symbol ratio, or spam repetition |
+| 4. Line-level clean | Join only the good lines (FLUX innovation — preserves good content) |
+| 5. Deduplicate | SHA-256 hash-based exact duplicate removal |
+| 6. Quality score | Score each sentence 0–0.8, keep those ≥ threshold |
+| 7. Token count | Estimate token savings (before vs after) |
+| 8. Save | Write `cleaned_data.json` + `stats.json` |
+
+---
+
+## Running the Tests
+
+The test suite has 60 tests across three files:
+
 ```bash
-# Stricter quality threshold
-python pipeline.py --threshold 0.65
+python3 -m unittest tests.test_utils tests.test_pipeline tests.test_api -v
+```
 
-# Lower minimum words per line
-python pipeline.py --min-words 3
+| File | Coverage | Tests |
+|---|---|---|
+| `tests/test_utils.py` | Unit — every function in `utils.py` | 27 |
+| `tests/test_pipeline.py` | Integration — full pipeline flow | 13 |
+| `tests/test_api.py` | End-to-end — all Flask API routes | 20 |
 
-# Custom folders
-python pipeline.py --data-dir my_docs/ --output-dir results/
-
-# All options combined
-python pipeline.py --data-dir data/ --output-dir output/ --threshold 0.60 --min-words 5
+**Expected output:**
+```
+Ran 60 tests in 0.02s
+OK
 ```
 
 ---
 
-## 📊 Expected Output
+## Deploying to Render
 
-After running, your `output/` folder will contain:
+The repository includes a `render.yaml` that configures everything automatically.
 
-**`cleaned_data.json`** — array of cleaned, high-quality sentences
-```json
-[
-  "machine learning is a subset of artificial intelligence.",
-  "neural networks learn patterns from large amounts of data.",
-  ...
-]
+**Steps:**
+
+1. Fork or push this repo to your GitHub account
+2. Go to [render.com](https://render.com) and sign in
+3. Click **New → Web Service**
+4. Connect your GitHub repository
+5. Render reads `render.yaml` automatically — no manual configuration needed
+6. Click **Create Web Service**
+
+**Build command** (runs automatically):
+```bash
+pip install -r requirements.txt && cd frontend && npm install && npm run build
 ```
 
-**`stats.json`** — full pipeline report
-```json
-{
-  "documents_loaded": 100,
-  "sentences_original": 8500,
-  "sentences_final": 6200,
-  "removed_pct": 27.1,
-  "retained_pct": 72.9,
-  "tokens_before": 100000,
-  "tokens_after": 75000,
-  "noise_tokens_removed_pct": 25.0
-}
+**Start command** (runs automatically):
+```bash
+gunicorn --chdir backend app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
 ```
 
-### Typical before vs after results
+Your app will be live at `https://your-service-name.onrender.com` within ~3 minutes.
 
-| Metric              | Before    | After     |
-|---------------------|-----------|-----------|
-| Total tokens        | ~100,000  | ~75,000   |
-| Noise removed       | —         | ~25%      |
-| Avg sentence length | 8 words   | 16 words  |
-| Duplicates          | ~30%      | 0%        |
-| Spam lines          | ~15%      | 0%        |
+> **Free tier note:** Render's free plan spins down after 15 minutes of inactivity. The first request after sleep takes ~30 seconds to wake up.
 
 ---
 
-## 🧠 Pipeline Steps Explained
+## Contributing
 
-| Step | What It Does | Why It Matters |
-|------|-------------|----------------|
-| 1 — Load | Reads all `.txt` files from `data/` | Gets raw data into memory |
-| 2 — Clean | Removes HTML, URLs, special characters, normalizes case | Eliminates formatting noise |
-| 3 — Heuristic Filter | Removes lines < 5 words, high symbol/digit ratio, spam | Fast rule-based quality gate |
-| 4 — Line-Level Clean ⭐ | Removes only bad lines, keeps good ones within same doc | FLUX innovation — less data loss |
-| 5 — Deduplication | SHA-256 hash-based exact duplicate removal | Prevents model memorization |
-| 6 — Quality Scoring | Scores each sentence 0–1 on 5 features, keeps score ≥ 0.5 | Fine-grained quality control |
-| 7 — Tokenization | Counts tokens for reporting (HuggingFace optional) | Shows real dataset size |
-| 8 — Output | Saves `cleaned_data.json` + `stats.json` | Ready-to-use dataset |
+Contributions are welcome! Here is how to get started:
 
----
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Make your changes and add tests if applicable
+4. Run the test suite to make sure everything passes: `python3 -m unittest tests.test_utils tests.test_pipeline tests.test_api`
+5. Commit your changes: `git commit -m "Add your feature"`
+6. Push to your fork and open a Pull Request
 
-## 🔬 Key Concept: Line-Level vs Document-Level Filtering
+Please keep pull requests focused — one feature or bug fix per PR.
 
-```
-❌ Old approach (Document-Level):
-   Document has 1 bad line → Delete ENTIRE document → 60-80% data loss
+### Areas where contributions are especially welcome
 
-✅ FLUX approach (Line-Level):
-   Document has 1 bad line → Delete ONLY that line → 20-30% data loss
-```
-
-**Example:**
-```
-Before:
-  "Climate change is a pressing global issue."     ← KEEP
-  "BUY NOW!!! LIMITED OFFER $$$"                  ← REMOVE (spam)
-  "Scientists predict further warming by 2100."    ← KEEP
-  "!!!"                                            ← REMOVE (noise)
-
-After:
-  "Climate change is a pressing global issue."
-  "Scientists predict further warming by 2100."
-```
+- Additional heuristic filters for `is_good_line`
+- Support for input formats beyond `.txt` (`.pdf`, `.docx`, `.csv`)
+- Near-duplicate detection using MinHash or SimHash
+- Language detection to filter non-English content
+- Frontend improvements (dark/light mode toggle, mobile layout)
 
 ---
 
-## 💡 Interview Talking Point
+## Getting Help
 
-> *"I implemented a mini data curation pipeline inspired by FLUX. Instead of aggressive document removal, I used line-level filtering to preserve useful information while removing noise. I also added hash-based deduplication and a multi-feature quality scoring system, resulting in a 25% reduction in noisy tokens while retaining 100% of high-value content."*
+If you run into a problem or have a question:
 
----
+- **Bug reports / feature requests** — [open a GitHub Issue](https://github.com/rajeshkadiyalaaa/datacleanx/issues)
+- **Questions about the FLUX paper** — see the included [FLUX Data Worth Training.pdf](FLUX%20Data%20Worth%20Training.pdf)
+- **General discussion** — use [GitHub Discussions](https://github.com/rajeshkadiyalaaa/datacleanx/discussions)
 
-## 🗓️ 2-Day Build Plan
-
-**Day 1**
-- [ ] Create folder structure
-- [ ] Add sample `.txt` files to `data/`
-- [ ] Write `utils.py` (load, clean, filter, dedup)
-- [ ] Test each function individually
-
-**Day 2**
-- [ ] Write `pipeline.py` (orchestrator)
-- [ ] Add quality scoring
-- [ ] Run full pipeline end-to-end
-- [ ] Check `output/stats.json` and verify results
-- [ ] Write README / comments
+When reporting a bug, please include:
+- Your Python and Node.js versions (`python3 --version`, `node --version`)
+- The exact error message or unexpected behaviour
+- A minimal example `.txt` file that reproduces the issue (if applicable)
 
 ---
 
-## 🧪 Quick Test (No data files needed)
+## Who Maintains This
 
-Add this to the bottom of `pipeline.py` for a quick test with fake data:
+This project is built and maintained by **[Rajesh Kadiyala](https://github.com/rajeshkadiyalaaa)**.
 
-```python
-# Quick test — paste into pipeline.py and run
-if __name__ == '__test__':
-    from pathlib import Path
-    Path('data').mkdir(exist_ok=True)
-    Path('data/test.txt').write_text("""
-    Machine learning is a powerful field of artificial intelligence.
-    Buy now!!! Click here $$$
-    Neural networks can learn complex patterns from data.
-    !!!
-    Deep learning models require large amounts of training data.
-    Visit our website at www.spam.com for special offers.
-    The quality of training data directly impacts model performance.
-    """)
-    run_pipeline()
-```
+Inspired by the FLUX data curation research: *"FLUX: Fast Software Updates by Updating Just the Right Files."*
 
 ---
 
-## 📦 Dependencies
+## License
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `transformers` | ≥ 4.35.0 | HuggingFace tokenizer (optional for stats) |
-| `torch` | ≥ 2.0.0 | Required by transformers |
+This project is licensed under the **MIT License** — you are free to use, modify, and distribute it.
 
-> **Note:** The pipeline runs without `transformers` if you remove the tokenization step. The core cleaning, filtering, deduplication, and scoring use only Python standard library.
+See [LICENSE](LICENSE) for full details.
 
 ---
 
-## 📝 License
-
-MIT — free to use, modify, and distribute.
-
----
-
-*Mini FLUX | Inspired by the FLUX Data Curation Research Paper*
+*DataCleanX — because the quality of your model is only as good as the quality of your data.*
