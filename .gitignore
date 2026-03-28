@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+*.pyc
+
+# Node
+node_modules/
+frontend/dist/
+
+# Output data (pipeline results)
+output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.cursor/
+.vscode/
+
+# Secrets
+.env
+*.env.*

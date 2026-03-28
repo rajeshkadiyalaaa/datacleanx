@@ -1,0 +1,47 @@
+Natural Language Processing - Wikipedia
+
+Contents [hide]
+1 Overview
+2 History
+3 Approaches
+4 Applications
+5 See also
+6 References
+7 External links
+
+Natural language processing (NLP) is an interdisciplinary subfield of computer science and linguistics. It is primarily concerned with giving computers the ability to support and manipulate human language. It involves processing natural language datasets, such as text corpora or speech recordings, and leads towards making computers perform natural language related tasks.
+
+!!!!!ADVERTISEMENT!!!!!
+Grammarly: Write with confidence. Get Grammarly FREE.
+Click here → www.grammarly.com/special-offer-2024
+!!!!!ADVERTISEMENT!!!!!
+
+Attempts to automate the processing of human language date back to the 1950s. A notable early example is the Georgetown experiment, which in 1954 involved fully automatic translation of more than sixty Russian sentences into English. The authors claimed that within three to five years, machine translation would be a solved problem.
+
+[edit] [edit] [edit] [edit source]
+^ Jump up to: a b c d
+See also: Computational linguistics · Text mining
+Navigation menu — Personal tools — Not logged in — Talk — Contributions
+
+The history of NLP generally starts in the 1950s, although work can be found from earlier periods. In 1950, Alan Turing published an article titled "Computing Machinery and Intelligence" which proposed what is now called the Turing test as a criterion of intelligence. The Georgetown experiment in 1954 involved fully automatic translation of more than sixty Russian sentences into English.
+
+[1] [2] [3] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17] [18]
+
+Up until the 1980s, most natural language processing systems were based on complex sets of hand-written rules. Starting in the late 1980s, however, there was a revolution in natural language processing with the introduction of machine learning algorithms for language processing. This was due both to the steady increase in computational power resulting from Moore's Law and the gradual lessening of the dominance of Chomskyan theories of linguistics.
+
+!!!
+...
+---
+***
+~~~
+
+In the 2010s, representation learning and deep neural network-style machine learning methods became widespread in natural language processing. That popularity was due partly to a flurry of results showing that such techniques can achieve state-of-the-art results in many NLP tasks, for example in language modeling and parsing.
+
+Retrieved from "https://en.wikipedia.org/wiki/Natural_language_processing"
+Categories: Natural language processing | Computational linguistics | Speech recognition | Machine translation | Hidden categories: Articles with short description
+
+This page was last edited on 15 January 2024. Text is available under the Creative Commons Attribution-ShareAlike License 4.0; additional terms may apply. Wikipedia® is a registered trademark of the Wikimedia Foundation, Inc.
+
+The large pretrained language models (LLMs) such as GPT-3, BERT, and their successors have demonstrated remarkable capabilities in generating coherent and contextually appropriate text. These models are trained on massive corpora of text data and learn statistical patterns that capture much of the complexity of human language.
+
+Privacy policy · About Wikipedia · Disclaimers · Contact Wikipedia · Code of conduct · Mobile view · Developers · Statistics · Cookie statement
